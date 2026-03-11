@@ -1,3 +1,11 @@
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+repeat task.wait() until game.Players.LocalPlayer
+
+print("quochuyhub-premium loading...")
+
 -- quochuyhub-premium UI V3
 
 local Players = game:GetService("Players")
