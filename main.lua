@@ -1,318 +1,346 @@
-if not game:IsLoaded() then
-	game.Loaded:Wait()
-end
+-- QUOCHUY HUB FULL
 
-repeat task.wait() until game.Players.LocalPlayer
-
-print("quochuyhub-premium loading...")
-
--- quochuyhub-premium UI V3
+repeat task.wait() until game:IsLoaded()
 
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
+local RS = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
-local HttpService = game:GetService("HttpService")
-local UIS = game:GetService("UserInputService")
+local TPService = game:GetService("TeleportService")
+local Http = game:GetService("HttpService")
 
-local player = Players.LocalPlayer
+local LP = Players.LocalPlayer
+local Char = LP.Character or LP.CharacterAdded:Wait()
 
--------------------------------------------------
--- BLUR BACKGROUND
--------------------------------------------------
-
-local blur = Instance.new("BlurEffect")
-blur.Size = 18
-blur.Parent = Lighting
+local Remotes = RS:WaitForChild("Remotes")
+local CommF = Remotes:WaitForChild("CommF_")
 
 -------------------------------------------------
--- LOADING SCREEN
+-- SETTINGS
 -------------------------------------------------
 
-local loading = Instance.new("ScreenGui",game.CoreGui)
-
-local loadFrame = Instance.new("Frame",loading)
-loadFrame.Size = UDim2.new(0,400,0,200)
-loadFrame.Position = UDim2.new(0.5,-200,0.5,-100)
-loadFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
-
-Instance.new("UICorner",loadFrame)
-
-local loadText = Instance.new("TextLabel",loadFrame)
-loadText.Size = UDim2.new(1,0,1,0)
-loadText.BackgroundTransparency = 1
-loadText.TextScaled = true
-loadText.TextColor3 = Color3.fromRGB(255,210,60)
-loadText.Text = "quochuyhub-premium\nLoading..."
-
-task.wait(2)
-
-loadText.Text = "Welcome "..player.Name
-task.wait(1)
-
-loading:Destroy()
+getgenv().AutoFarm=false
+getgenv().AutoBoss=false
+getgenv().AutoSeaBeast=false
+getgenv().AutoLeviathan=false
+getgenv().AutoKitsune=false
+getgenv().AutoVolcano=false
+getgenv().FruitSniper=false
 
 -------------------------------------------------
--- CONFIG SAVE SYSTEM
+-- RAYFIELD GUI
 -------------------------------------------------
 
-local configFile = "quochuyhub_config.json"
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-local config = {
-	speed = 16
+local Window = Rayfield:CreateWindow({
+Name = "QuocHuy Hub",
+LoadingTitle = "BloxFruit Clone Hub",
+LoadingSubtitle = "Auto System"
+})
+
+local Main = Window:CreateTab("Main",4483362458)
+
+Main:CreateToggle({
+Name="Auto Farm",
+CurrentValue=false,
+Callback=function(v)
+getgenv().AutoFarm=v
+end
+})
+
+Main:CreateToggle({
+Name="Auto Boss",
+CurrentValue=false,
+Callback=function(v)
+getgenv().AutoBoss=v
+end
+})
+
+Main:CreateToggle({
+Name="Auto Sea Beast",
+CurrentValue=false,
+Callback=function(v)
+getgenv().AutoSeaBeast=v
+end
+})
+
+Main:CreateToggle({
+Name="Fruit Sniper",
+CurrentValue=false,
+Callback=function(v)
+getgenv().FruitSniper=v
+end
+})
+
+-------------------------------------------------
+-- QUEST TABLE (LEVEL SYSTEM)
+-------------------------------------------------
+
+local QuestTable={
+
+{Min=1,Max=9,Mob="Bandit",Quest="BanditQuest1",Level=1},
+{Min=10,Max=14,Mob="Monkey",Quest="JungleQuest",Level=1},
+{Min=15,Max=29,Mob="Gorilla",Quest="JungleQuest",Level=2},
+{Min=30,Max=39,Mob="Pirate",Quest="BuggyQuest1",Level=1},
+{Min=40,Max=59,Mob="Brute",Quest="BuggyQuest1",Level=2},
+
+{Min=60,Max=74,Mob="Desert Bandit",Quest="DesertQuest",Level=1},
+{Min=75,Max=89,Mob="Desert Officer",Quest="DesertQuest",Level=2},
+
+{Min=90,Max=99,Mob="Snow Bandit",Quest="SnowQuest",Level=1},
+{Min=100,Max=119,Mob="Snowman",Quest="SnowQuest",Level=2},
+
+{Min=700,Max=724,Mob="Raider",Quest="Area1Quest",Level=1},
+{Min=725,Max=774,Mob="Mercenary",Quest="Area1Quest",Level=2},
+
+{Min=1500,Max=1524,Mob="Pirate Millionaire",Quest="PiratePortQuest",Level=1},
+{Min=1525,Max=1574,Mob="Pistol Billionaire",Quest="PiratePortQuest",Level=2}
+
 }
 
-pcall(function()
-	if readfile and isfile(configFile) then
-		config = HttpService:JSONDecode(readfile(configFile))
-	end
-end)
+-------------------------------------------------
+-- LEVEL FUNCTIONS
+-------------------------------------------------
 
-local function saveConfig()
+function GetLevel()
+return LP.Data.Level.Value
+end
 
-	if writefile then
-		writefile(configFile,HttpService:JSONEncode(config))
-	end
+function GetQuest()
+
+local Level=GetLevel()
+
+for i,v in pairs(QuestTable) do
+if Level>=v.Min and Level<=v.Max then
+return v
+end
+end
 
 end
 
 -------------------------------------------------
--- MAIN GUI
+-- AUTO FARM
 -------------------------------------------------
 
-local gui = Instance.new("ScreenGui",game.CoreGui)
+task.spawn(function()
 
-local main = Instance.new("Frame",gui)
-main.Size = UDim2.new(0,650,0,420)
-main.Position = UDim2.new(0.5,-325,1,0)
-main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+while task.wait() do
 
-Instance.new("UICorner",main)
+if getgenv().AutoFarm then
 
-local stroke = Instance.new("UIStroke",main)
-stroke.Color = Color3.fromRGB(255,210,60)
+local Quest=GetQuest()
 
--------------------------------------------------
--- OPEN ANIMATION
--------------------------------------------------
+for i,v in pairs(workspace.Enemies:GetChildren()) do
 
-TweenService:Create(
-	main,
-	TweenInfo.new(0.5,Enum.EasingStyle.Quad),
-	{Position = UDim2.new(0.5,-325,0.5,-210)}
-):Play()
+if v.Name==Quest.Mob and v:FindFirstChild("Humanoid") then
 
--------------------------------------------------
--- DRAGGABLE GUI
--------------------------------------------------
+repeat task.wait()
 
-local dragging = false
-local dragStart
-local startPos
+Char.HumanoidRootPart.CFrame=
+v.HumanoidRootPart.CFrame*CFrame.new(0,0,5)
 
-main.InputBegan:Connect(function(input)
+until v.Humanoid.Health<=0
 
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = main.Position
-	end
-
-end)
-
-main.InputEnded:Connect(function(input)
-
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-
-end)
-
-UIS.InputChanged:Connect(function(input)
-
-	if dragging then
-
-		local delta = input.Position - dragStart
-
-		main.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-
-	end
-
-end)
-
--------------------------------------------------
--- SIDEBAR
--------------------------------------------------
-
-local sidebar = Instance.new("Frame",main)
-sidebar.Size = UDim2.new(0,160,1,0)
-sidebar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-
-local title = Instance.new("TextLabel",sidebar)
-title.Size = UDim2.new(1,0,0,50)
-title.Text = "quochuyhub"
-title.BackgroundTransparency = 1
-title.TextScaled = true
-title.TextColor3 = Color3.fromRGB(255,210,60)
-
--------------------------------------------------
--- CONTENT AREA
--------------------------------------------------
-
-local content = Instance.new("Frame",main)
-content.Size = UDim2.new(1,-160,1,0)
-content.Position = UDim2.new(0,160,0,0)
-content.BackgroundTransparency = 1
-
--------------------------------------------------
--- TAB SYSTEM
--------------------------------------------------
-
-local icons = {
-	Main = "rbxassetid://7733960981",
-	Player = "rbxassetid://7734056608",
-	Misc = "rbxassetid://7734010485"
-}
-
-local tabs = {}
-local tabFrames = {}
-
-local function createTab(name,order)
-
-	local btn = Instance.new("TextButton",sidebar)
-	btn.Size = UDim2.new(1,0,0,40)
-	btn.Position = UDim2.new(0,0,0,60+(order*45))
-	btn.Text = "  "..name
-	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	btn.TextColor3 = Color3.new(1,1,1)
-
-	local icon = Instance.new("ImageLabel",btn)
-	icon.Size = UDim2.new(0,20,0,20)
-	icon.Position = UDim2.new(0,5,0.5,-10)
-	icon.BackgroundTransparency = 1
-	icon.Image = icons[name]
-
-	local frame = Instance.new("Frame",content)
-	frame.Size = UDim2.new(1,0,1,0)
-	frame.Visible = false
-	frame.BackgroundTransparency = 1
-
-	tabFrames[name] = frame
-
-	btn.MouseButton1Click:Connect(function()
-
-		for _,v in pairs(tabFrames) do
-			v.Visible = false
-		end
-
-		frame.Position = UDim2.new(0.1,0,0,0)
-		frame.Visible = true
-
-		TweenService:Create(
-			frame,
-			TweenInfo.new(0.25),
-			{Position = UDim2.new(0,0,0,0)}
-		):Play()
-
-	end)
-
-	return frame
 end
-
--------------------------------------------------
--- CREATE TABS
--------------------------------------------------
-
-local mainTab = createTab("Main",1)
-local playerTab = createTab("Player",2)
-local miscTab = createTab("Misc",3)
-
-tabFrames["Main"].Visible = true
-
--------------------------------------------------
--- TOGGLE SYSTEM
--------------------------------------------------
-
-local function createToggle(parent,text,callback)
-
-	local toggle = Instance.new("TextButton",parent)
-	toggle.Size = UDim2.new(0,220,0,40)
-	toggle.Position = UDim2.new(0,20,0,20)
-	toggle.Text = text.." : OFF"
-	toggle.BackgroundColor3 = Color3.fromRGB(45,45,45)
-
-	local state = false
-
-	toggle.MouseButton1Click:Connect(function()
-
-		state = not state
-
-		toggle.Text = text.." : "..(state and "ON" or "OFF")
-
-		callback(state)
-
-	end)
+end
 
 end
 
+end
+
+end)
+
 -------------------------------------------------
--- SLIDER SYSTEM
+-- AUTO BOSS
 -------------------------------------------------
 
-local function createSlider(parent,text,min,max,callback)
+task.spawn(function()
 
-	local slider = Instance.new("TextButton",parent)
-	slider.Size = UDim2.new(0,220,0,40)
-	slider.Position = UDim2.new(0,20,0,80)
+while task.wait() do
 
-	local value = min
+if getgenv().AutoBoss then
 
-	slider.Text = text.." : "..value
+for i,v in pairs(workspace.Enemies:GetChildren()) do
 
-	slider.MouseButton1Click:Connect(function()
+if string.find(v.Name,"Boss") then
 
-		value += 5
-		if value > max then value = min end
+repeat task.wait()
 
-		slider.Text = text.." : "..value
+Char.HumanoidRootPart.CFrame=
+v.HumanoidRootPart.CFrame*CFrame.new(0,10,0)
 
-		callback(value)
+until v.Humanoid.Health<=0
 
-		config.speed = value
-		saveConfig()
-
-	end)
+end
+end
 
 end
 
+end
+
+end)
+
 -------------------------------------------------
--- NOTIFICATION
+-- AUTO SEA BEAST
 -------------------------------------------------
 
-local function Notify(text)
+task.spawn(function()
 
-	game.StarterGui:SetCore("SendNotification",{
-		Title = "quochuyhub-premium",
-		Text = text,
-		Duration = 4
-	})
+while task.wait() do
+
+if getgenv().AutoSeaBeast then
+
+if workspace:FindFirstChild("SeaBeasts") then
+
+for i,v in pairs(workspace.SeaBeasts:GetChildren()) do
+
+repeat task.wait()
+
+Char.HumanoidRootPart.CFrame=
+v.HumanoidRootPart.CFrame*CFrame.new(0,50,0)
+
+until v.Humanoid.Health<=0
 
 end
 
--------------------------------------------------
--- EXAMPLE UI
--------------------------------------------------
+end
 
-createToggle(mainTab,"Example Toggle",function(v)
-	print("toggle:",v)
+end
+
+end
+
 end)
 
-createSlider(playerTab,"Speed",10,100,function(v)
-	print("speed:",v)
+-------------------------------------------------
+-- AUTO LEVIATHAN
+-------------------------------------------------
+
+task.spawn(function()
+
+while task.wait() do
+
+if getgenv().AutoLeviathan then
+
+if workspace:FindFirstChild("Leviathan") then
+
+local boss=workspace.Leviathan
+
+repeat task.wait()
+
+Char.HumanoidRootPart.CFrame=
+boss.HumanoidRootPart.CFrame*CFrame.new(0,60,0)
+
+until boss.Humanoid.Health<=0
+
+end
+
+end
+
+end
+
 end)
 
-Notify("UI Loaded Successfully")
+-------------------------------------------------
+-- AUTO KITSUNE
+-------------------------------------------------
+
+task.spawn(function()
+
+while task.wait() do
+
+if getgenv().AutoKitsune then
+
+if workspace:FindFirstChild("KitsuneIsland") then
+
+Char.HumanoidRootPart.CFrame=
+workspace.KitsuneIsland.CFrame
+
+end
+
+end
+
+end
+
+end)
+
+-------------------------------------------------
+-- VOLCANO EVENT
+-------------------------------------------------
+
+task.spawn(function()
+
+while task.wait() do
+
+if getgenv().AutoVolcano then
+
+if workspace:FindFirstChild("VolcanoIsland") then
+
+local island=workspace.VolcanoIsland
+
+for i,v in pairs(island:GetChildren()) do
+
+if v.Name=="Golem" then
+
+repeat task.wait()
+
+Char.HumanoidRootPart.CFrame=
+v.HumanoidRootPart.CFrame
+
+until v.Humanoid.Health<=0
+
+end
+
+end
+
+end
+
+end
+
+end
+
+end)
+
+-------------------------------------------------
+-- FRUIT SNIPER + SERVER HOP
+-------------------------------------------------
+
+task.spawn(function()
+
+while task.wait(10) do
+
+if getgenv().FruitSniper then
+
+local found=false
+
+for i,v in pairs(workspace:GetChildren()) do
+
+if string.find(v.Name,"Fruit") then
+
+Char.HumanoidRootPart.CFrame=v.CFrame
+found=true
+
+end
+end
+
+if not found then
+
+local servers=Http:JSONDecode(game:HttpGet(
+"https://games.roblox.com/v1/games/"..
+game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"))
+
+for i,v in pairs(servers.data) do
+
+if v.playing<v.maxPlayers then
+
+TPService:TeleportToPlaceInstance(game.PlaceId,v.id)
+
+end
+end
+
+end
+
+end
+
+end
+
+end)
